@@ -8,6 +8,8 @@ jobs:
 
         steps:
         - uses: actions/checkout@v1
+        - name: Install dependencies
+          run: sudo apt install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
         - name: Build
           run: cargo build --verbose
         - name: Run tests
