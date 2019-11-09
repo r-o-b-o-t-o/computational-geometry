@@ -1,3 +1,6 @@
+pub mod shaders;
+pub use shaders::SHADERS;
+
 use crate::math::Vec2;
 use glium::glutin::dpi::LogicalSize;
 use glium::{ Display, Version, Api, Profile };

@@ -3,6 +3,7 @@ extern crate glium;
 
 pub mod ui;
 pub mod math;
+pub mod tests;
 pub mod graphics;
 pub mod algorithms;
 

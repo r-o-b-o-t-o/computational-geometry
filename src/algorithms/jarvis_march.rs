@@ -1,4 +1,7 @@
-use crate::math::{ self, Vec2 };
+use crate::{
+    graphics,
+    math::{ self, Vec2 },
+};
 
 use glium::{
     index, Surface, Frame, Program, VertexBuffer, DrawParameters,
@@ -22,7 +25,10 @@ pub struct JarvisMarch<'f> {
 
 impl<'f> JarvisMarch<'f> {
     pub fn new(facade: &'f dyn Facade) -> Self {
-        let program = Program::from_source(facade, include_str!("../../shaders/2d.vs.glsl"), include_str!("../../shaders/basic.fs.glsl"), None).expect("Could not compile shaders");
+        let vs = graphics::SHADERS._2d_vs;
+        let fs = graphics::SHADERS.basic_fs;
+        let program = Program::from_source(facade, vs, fs, None)
+                                    .expect("Could not compile shaders");
 
         Self {
             facade,
@@ -68,7 +74,13 @@ impl<'f> JarvisMarch<'f> {
             position: point,
         });
         self.points_buffer = VertexBuffer::new(self.facade, &self.points).unwrap();
-        self.march();
+
+        let input = self.points.iter().map(|p| p.position);
+        let hull = Self::march(input)
+                            .into_iter()
+                            .map(|position| Vertex { position })
+                            .collect::<Vec<_>>();
+        self.hull_buffer = VertexBuffer::new(self.facade, &hull).unwrap();
     }
 
     pub fn random_points(&mut self, n: usize) {
@@ -82,40 +94,44 @@ impl<'f> JarvisMarch<'f> {
         }
     }
 
-    fn leftmost_point(&self) -> (usize, &Vertex) {
-        assert!(!self.points.is_empty());
+    fn leftmost_point<I>(points: I) -> (usize, Vec2)
+    where I: ExactSizeIterator<Item = Vec2> + Clone {
+        assert_ne!(points.len(), 0);
 
-        self.points
-                .iter()
-                .enumerate()
-                .scan((0, &self.points[0]), |leftmost, p| {
-                    let pos = p.1.position;
-                    let lpos = leftmost.1.position;
-                    if pos.x < lpos.x || math::cmp_f32(pos.x, lpos.x) && pos.y < lpos.y {
-                        *leftmost = p;
-                    }
-                    Some(*leftmost)
-                })
-                .last()
-                .unwrap()
+        let first = *points.clone().peekable().peek().unwrap();
+        points
+            .enumerate()
+            .scan((0, first), |leftmost, p| {
+                let pos = p.1;
+                let lpos = leftmost.1;
+                if pos.x < lpos.x || math::cmp_f32(pos.x, lpos.x) && pos.y < lpos.y {
+                    *leftmost = p;
+                }
+                Some(*leftmost)
+            })
+            .last()
+            .unwrap()
     }
 
-    fn march(&mut self) {
-        if self.points.len() < 2 {
-            return;
+    pub fn march<I>(points: I) -> Vec<Vec2>
+    where I: ExactSizeIterator<Item = Vec2> + Clone {
+        let mut hull = Vec::new();
+
+        if points.len() < 2 {
+            return hull;
         }
 
-        let mut hull = Vec::new();
-        let leftmost = self.leftmost_point();
+        let leftmost = Self::leftmost_point(points.clone());
         let mut hull_point = leftmost;
+        let mut peekable = points.clone().peekable();
 
         loop {
-            hull.push(*hull_point.1);
-            let mut best = (0, &self.points[0]);
+            hull.push(hull_point.1);
+            let mut best = (0, *peekable.peek().unwrap());
 
-            for checked in self.points.iter().enumerate() {
-                let hullpoint_to_checked = &checked.1.position - &hull_point.1.position;
-                let hullpoint_to_best = &best.1.position - &hull_point.1.position;
+            for checked in points.clone().enumerate() {
+                let hullpoint_to_checked = &checked.1 - &hull_point.1;
+                let hullpoint_to_best = &best.1 - &hull_point.1;
                 let angle = hullpoint_to_checked.signed_angle(hullpoint_to_best);
                 if best.0 == hull_point.0 || angle < 0.0 {
                     best = checked;
@@ -128,6 +144,6 @@ impl<'f> JarvisMarch<'f> {
             }
         }
 
-        self.hull_buffer = VertexBuffer::new(self.facade, &hull).unwrap();
+        hull
     }
 }
