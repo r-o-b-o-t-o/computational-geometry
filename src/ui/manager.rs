@@ -9,14 +9,14 @@ use winit::Event;
 use imgui_glium_renderer::Renderer as ImRenderer;
 use imgui_winit_support::{ HiDpiMode, WinitPlatform };
 
-pub struct Manager {
+pub struct Manager<'a> {
     imgui: ImContext,
     platform: WinitPlatform,
     imgui_renderer: ImRenderer,
-    windows: Vec<Box<dyn Window>>,
+    windows: Vec<Box<dyn Window + 'a>>,
 }
 
-impl Manager {
+impl<'a> Manager<'a> {
     pub fn new(display: &Display) -> Self {
         let mut imgui = ImContext::create();
         imgui.set_ini_filename(None);
@@ -58,6 +58,10 @@ impl Manager {
 
     pub fn handle_events(&mut self, window: &winit::Window, event: &Event) {
         self.platform.handle_event(self.imgui.io_mut(), window, event);
+
+        for ui_win in self.windows.iter_mut() {
+            ui_win.handle_events(window, event, self.imgui.io());
+        }
     }
 
     pub fn draw(&mut self, window: &winit::Window, target: &mut Frame) {
@@ -66,15 +70,19 @@ impl Manager {
         let ui = self.imgui.frame();
 
         for ui_win in self.windows.iter_mut() {
-            ui_win.draw(&ui, window);
+            ui_win.draw(target, &ui, window);
         }
 
         self.platform.prepare_render(&ui, &window);
         self.imgui_renderer.render(target, ui.render()).expect("Could not render ImGui");
     }
 
-    pub fn add_window<W: 'static>(&mut self, window: W)
+    pub fn add_window<W: 'a>(&mut self, window: W)
     where W: Window {
         self.windows.push(Box::new(window));
+    }
+
+    pub fn imgui_io(&self) -> &imgui::Io {
+        self.imgui.io()
     }
 }

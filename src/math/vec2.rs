@@ -226,3 +226,21 @@ impl Neg for &Vec2 {
         }
     }
 }
+
+impl From<[f32; 2]> for Vec2 {
+    fn from(arr: [f32; 2]) -> Self {
+        Self::new(arr[0], arr[1])
+    }
+}
+
+impl From<&[f32; 2]> for Vec2 {
+    fn from(arr: &[f32; 2]) -> Self {
+        Self::new(arr[0], arr[1])
+    }
+}
+
+impl Into<[f32; 2]> for &Vec2 {
+    fn into(self) -> [f32; 2] {
+        [ self.x, self.y ]
+    }
+}

@@ -46,7 +46,7 @@ impl Default for Debug {
 }
 
 impl Window for Debug {
-    fn draw(&mut self, ui: &Ui, window: &winit::Window) {
+    fn draw(&mut self, _target: &mut glium::Frame, ui: &Ui, window: &winit::Window) {
         let win_size = match window.get_inner_size() {
             Some(dim) => dim,
             None => return,

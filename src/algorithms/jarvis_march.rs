@@ -1,11 +1,13 @@
 use crate::{
     graphics,
     math::{ self, Vec2 },
+    ui::window::algorithms::{ Drawable, Configurable },
 };
 
 use glium::{
     index, Surface, Frame, Program, VertexBuffer, DrawParameters,
     backend::Facade,
+    glutin::{ Event, WindowEvent },
 };
 
 #[derive(Copy, Clone, Debug)]
@@ -23,6 +25,36 @@ pub struct JarvisMarch<'f> {
     hull_buffer: VertexBuffer<Vertex>,
 }
 
+impl<'f> Drawable for JarvisMarch<'f> {
+    fn draw(&self, target: &mut Frame) {
+        self.draw_points(target);
+        self.draw_hull(target);
+    }
+
+    fn handle_events(&mut self, window: &winit::Window, event: &winit::Event, io: &imgui::Io) {
+        if let Event::WindowEvent { event, .. } = event {
+            if let WindowEvent::MouseInput { button, state, .. } = event {
+                if !io.want_capture_mouse && button == &winit::MouseButton::Left && state == &winit::ElementState::Pressed {
+                    let coords = graphics::window_pos_to_normalized(io.mouse_pos.into(), window);
+                    self.add_point(coords);
+                }
+            }
+        }
+    }
+}
+
+impl<'f> Configurable for JarvisMarch<'f> {
+    fn name(&self) -> &'static str {
+        "Jarvis march"
+    }
+
+    fn configure(&mut self, ui: &imgui::Ui) {
+        if ui.button(imgui::im_str!("Clear Points"), [0.0, 0.0]) {
+            self.clear();
+        }
+    }
+}
+
 impl<'f> JarvisMarch<'f> {
     pub fn new(facade: &'f dyn Facade) -> Self {
         let vs = graphics::SHADERS._2d_vs;
@@ -37,11 +69,6 @@ impl<'f> JarvisMarch<'f> {
             points_buffer: VertexBuffer::empty(facade, 0).unwrap(),
             hull_buffer: VertexBuffer::empty(facade, 0).unwrap(),
         }
-    }
-
-    pub fn draw(&self, target: &mut Frame) {
-        self.draw_points(target);
-        self.draw_hull(target);
     }
 
     fn draw_points(&self, target: &mut Frame) {
@@ -92,6 +119,12 @@ impl<'f> JarvisMarch<'f> {
         for _ in 0..n {
             self.add_point(Vec2::random_range(x_min, x_max, y_min, y_max));
         }
+    }
+
+    pub fn clear(&mut self) {
+        self.points.clear();
+        self.points_buffer = VertexBuffer::empty(self.facade, 0).unwrap();
+        self.hull_buffer = VertexBuffer::empty(self.facade, 0).unwrap();
     }
 
     fn leftmost_point<'a, I>(points: I) -> (usize, &'a Vec2)

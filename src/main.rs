@@ -30,35 +30,28 @@ fn main() {
 
     let mut ui_mngr = ui::init(&display);
     ui_mngr.add_window(ui::window::Debug::default());
+    ui_mngr.add_window(ui::window::Algorithms::new(&display));
 
     let gl_window = display.gl_window();
     let window = gl_window.window();
 
-    let mut jarvis = algorithms::JarvisMarch::new(&display);
-
     let mut run = true;
-    let mut mouse_pos = math::Vec2::default();
     while run {
         events_loop.poll_events(|event| {
             ui_mngr.handle_events(window, &event);
 
+            let io = ui_mngr.imgui_io();
             if let Event::WindowEvent { event, .. } = event {
                 match &event {
                     WindowEvent::CloseRequested => run = false,
-                    WindowEvent::KeyboardInput { input, .. } => if let Some(key) = input.virtual_keycode {
-                        if key == winit::VirtualKeyCode::Escape {
-                            run = false;
+                    WindowEvent::KeyboardInput { input, .. } => {
+                        if !io.want_capture_keyboard {
+                            if let Some(key) = input.virtual_keycode {
+                                if key == winit::VirtualKeyCode::Escape {
+                                    run = false;
+                                }
+                            }
                         }
-                    },
-                    WindowEvent::MouseInput { button, state, .. } => {
-                        if button == &winit::MouseButton::Left && state == &winit::ElementState::Pressed {
-                            let coords = graphics::window_pos_to_normalized(mouse_pos, window);
-                            jarvis.add_point(coords);
-                        }
-                    },
-                    WindowEvent::CursorMoved { position, .. } => {
-                        mouse_pos.x = position.x as f32;
-                        mouse_pos.y = position.y as f32;
                     },
                     _ => {},
                 }
@@ -67,7 +60,6 @@ fn main() {
 
         let mut target = display.draw();
         target.clear_color_srgb(0.12, 0.12, 0.12, 1.0);
-        jarvis.draw(&mut target);
         ui_mngr.draw(&window, &mut target);
         target.finish().expect("Could not swap buffers");
     }
