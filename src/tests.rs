@@ -19,7 +19,7 @@ fn jarvis_march_basic() {
     ];
     let hull_indices = [ 11, 10, 2, 8, 6 ];
 
-    let hull = crate::algorithms::JarvisMarch::march(points.clone().into_iter());
+    let hull = crate::algorithms::JarvisMarch::march(points.iter());
     for (idx, &point) in hull.iter().enumerate() {
         assert_eq!(point, points[hull_indices[idx]]);
     }

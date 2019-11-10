@@ -75,7 +75,7 @@ impl<'f> JarvisMarch<'f> {
         });
         self.points_buffer = VertexBuffer::new(self.facade, &self.points).unwrap();
 
-        let input = self.points.iter().map(|p| p.position);
+        let input = self.points.iter().map(|p| &p.position);
         let hull = Self::march(input)
                             .into_iter()
                             .map(|position| Vertex { position })
@@ -94,8 +94,8 @@ impl<'f> JarvisMarch<'f> {
         }
     }
 
-    fn leftmost_point<I>(points: I) -> (usize, Vec2)
-    where I: ExactSizeIterator<Item = Vec2> + Clone {
+    fn leftmost_point<'a, I>(points: I) -> (usize, &'a Vec2)
+    where I: ExactSizeIterator<Item = &'a Vec2> + Clone {
         assert_ne!(points.len(), 0);
 
         let first = *points.clone().peekable().peek().unwrap();
@@ -113,8 +113,8 @@ impl<'f> JarvisMarch<'f> {
             .unwrap()
     }
 
-    pub fn march<I>(points: I) -> Vec<Vec2>
-    where I: ExactSizeIterator<Item = Vec2> + Clone {
+    pub fn march<'a, I>(points: I) -> Vec<Vec2>
+    where I: ExactSizeIterator<Item = &'a Vec2> + Clone {
         let mut hull = Vec::new();
 
         if points.len() < 2 {
@@ -126,12 +126,12 @@ impl<'f> JarvisMarch<'f> {
         let mut peekable = points.clone().peekable();
 
         loop {
-            hull.push(hull_point.1);
+            hull.push(*hull_point.1);
             let mut best = (0, *peekable.peek().unwrap());
 
             for checked in points.clone().enumerate() {
-                let hullpoint_to_checked = &checked.1 - &hull_point.1;
-                let hullpoint_to_best = &best.1 - &hull_point.1;
+                let hullpoint_to_checked = checked.1 - hull_point.1;
+                let hullpoint_to_best = best.1 - hull_point.1;
                 let angle = hullpoint_to_checked.signed_angle(hullpoint_to_best);
                 if best.0 == hull_point.0 || angle < 0.0 {
                     best = checked;
