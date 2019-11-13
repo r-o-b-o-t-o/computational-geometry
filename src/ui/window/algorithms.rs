@@ -14,13 +14,18 @@ pub trait Drawable {
 }
 
 pub trait Configurable {
+    /// The name that will be shown in the algorithms dropdown list.
     fn name(&self) -> &'static str;
+    /// Called by the window to configure the algorithm when it is selected,
+    /// use the passed `ui` object to display an algorithm-specific user interface.
     fn configure(&mut self, _ui: &Ui) { }
 }
 
 trait A: Drawable + Configurable { }
 impl<T> A for T where T: Drawable + Configurable { }
 
+/// A window containing a dropdown list of all available algorithms.
+/// The currently selected algorithm will be rendered to the window.
 pub struct Algorithms<'f> {
     algs: Vec<Box<dyn A + 'f>>,
     selected: usize,
@@ -43,6 +48,7 @@ impl<'f> Window for Algorithms<'f> {
             return;
         }
 
+        // Draw the selected algorithm
         self.algs[self.selected].draw(target);
 
         imgui::Window::new(im_str!("Algorithms"))
@@ -50,6 +56,7 @@ impl<'f> Window for Algorithms<'f> {
                     .size([200.0, 100.0], Condition::FirstUseEver)
                     .position([16.0, 16.0], Condition::FirstUseEver)
                     .build(&ui, || {
+                        // Create a vector containing the names of the available algorithms
                         let items = self.algs
                                             .iter()
                                             .map(|alg| ImString::from(alg.name().to_owned()))

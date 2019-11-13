@@ -19,9 +19,12 @@ implement_vertex!(Vertex, position);
 
 pub struct JarvisMarch<'f> {
     facade: &'f dyn Facade,
+    /// Input points that will be wrapped in the generated hull
     points: Vec<Vertex>,
     program: Program,
+    /// Buffer object that stores all the points
     points_buffer: VertexBuffer<Vertex>,
+    /// Buffer object that stores the points that form the hull
     hull_buffer: VertexBuffer<Vertex>,
 }
 
@@ -34,7 +37,10 @@ impl<'f> Drawable for JarvisMarch<'f> {
     fn handle_events(&mut self, window: &winit::Window, event: &winit::Event, io: &imgui::Io) {
         if let Event::WindowEvent { event, .. } = event {
             if let WindowEvent::MouseInput { button, state, .. } = event {
-                if !io.want_capture_mouse && button == &winit::MouseButton::Left && state == &winit::ElementState::Pressed {
+                if !io.want_capture_mouse && // Ignore clicks when the cursor is over an ImGui window
+                    button == &winit::MouseButton::Left && state == &winit::ElementState::Pressed {
+
+                    // Add a point when the window is clicked
                     let coords = graphics::window_pos_to_normalized(io.mouse_pos.into(), window);
                     self.add_point(coords);
                 }
@@ -66,8 +72,8 @@ impl<'f> JarvisMarch<'f> {
             facade,
             points: Vec::new(),
             program,
-            points_buffer: VertexBuffer::empty(facade, 0).unwrap(),
-            hull_buffer: VertexBuffer::empty(facade, 0).unwrap(),
+            points_buffer: VertexBuffer::empty(facade, 0).unwrap(), // Start without any point
+            hull_buffer: VertexBuffer::empty(facade, 0).unwrap(), // Same for the hull
         }
     }
 
@@ -96,22 +102,23 @@ impl<'f> JarvisMarch<'f> {
         target.draw(&self.hull_buffer, &indices, &self.program, &uniforms, &draw_params).expect("Draw failure");
     }
 
+    /// Add an input point that will be used to compute the convex hull.
     pub fn add_point(&mut self, point: Vec2) {
         self.points.push(Vertex {
             position: point,
         });
-        self.points_buffer = VertexBuffer::new(self.facade, &self.points).unwrap();
+        self.points_buffer = VertexBuffer::new(self.facade, &self.points).unwrap(); // Regenerate the buffer
 
-        let input = self.points.iter().map(|p| &p.position);
+        let input = self.points.iter().map(|p| &p.position); // Prepare input for the march algorithm
         let hull = Self::march(input)
                             .into_iter()
-                            .map(|position| Vertex { position })
+                            .map(|idx| self.points[idx])
                             .collect::<Vec<_>>();
-        self.hull_buffer = VertexBuffer::new(self.facade, &hull).unwrap();
+        self.hull_buffer = VertexBuffer::new(self.facade, &hull).unwrap(); // Regenerate the hull buffer from result
     }
 
     pub fn random_points(&mut self, n: usize) {
-        let x_min = -0.8;
+        let x_min = -0.8; // 0.8 to prevent getting too close to the edges of the window
         let x_max = -x_min;
         let y_min = x_min;
         let y_max = -y_min;
@@ -121,12 +128,16 @@ impl<'f> JarvisMarch<'f> {
         }
     }
 
+    /// Removes all the points.
     pub fn clear(&mut self) {
         self.points.clear();
         self.points_buffer = VertexBuffer::empty(self.facade, 0).unwrap();
         self.hull_buffer = VertexBuffer::empty(self.facade, 0).unwrap();
     }
 
+    /// Find the point that is the furthest on the left.
+    /// If two points are on the same vertical line, the one that has the lower coordinates is returned.
+    /// Returns a tuple that contains the index of the point found and a reference to its position in the input iterator.
     fn leftmost_point<'a, I>(points: I) -> (usize, &'a Vec2)
     where I: ExactSizeIterator<Item = &'a Vec2> + Clone {
         assert_ne!(points.len(), 0);
@@ -146,7 +157,9 @@ impl<'f> JarvisMarch<'f> {
             .unwrap()
     }
 
-    pub fn march<'a, I>(points: I) -> Vec<Vec2>
+    /// Returns a `Vec` of the indices of the points in the
+    /// specified iterator `points` that form the convex hull.
+    pub fn march<'a, I>(points: I) -> Vec<usize>
     where I: ExactSizeIterator<Item = &'a Vec2> + Clone {
         let mut hull = Vec::new();
 
@@ -155,24 +168,24 @@ impl<'f> JarvisMarch<'f> {
         }
 
         let leftmost = Self::leftmost_point(points.clone());
-        let mut hull_point = leftmost;
+        let mut hull_point = leftmost; // Start with the leftmost point
         let mut peekable = points.clone().peekable();
 
         loop {
-            hull.push(*hull_point.1);
-            let mut best = (0, *peekable.peek().unwrap());
+            hull.push(hull_point.0);
+            let mut best = (0, *peekable.peek().unwrap()); // The current best point candidate for the hull
 
             for checked in points.clone().enumerate() {
                 let hullpoint_to_checked = checked.1 - hull_point.1;
                 let hullpoint_to_best = best.1 - hull_point.1;
                 let angle = hullpoint_to_checked.signed_angle(hullpoint_to_best);
                 if best.0 == hull_point.0 || angle < 0.0 {
-                    best = checked;
+                    best = checked; // We found a better candidate
                 }
             }
-            hull_point = best;
+            hull_point = best; // Add the point we found to the hull
 
-            if hull_point.0 == leftmost.0 {
+            if hull_point.0 == leftmost.0 { // Wrapped around all points, we're done
                 break;
             }
         }

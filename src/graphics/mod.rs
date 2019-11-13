@@ -45,6 +45,7 @@ pub fn print_api_info(display: &Display) {
     println!("{} context vendor: {}", api, display.get_opengl_vendor_string());
 }
 
+/// Takes a position in window space coordinates and converts it to coordinates clamped between -1.0 and 1.0.
 pub fn window_pos_to_normalized(mut pos: Vec2, window: &winit::Window) -> Vec2 {
     let size = window.get_inner_size().unwrap_or_else(|| LogicalSize::new(1.0, 1.0));
     let size = Vec2::new(size.width as f32, size.height as f32);

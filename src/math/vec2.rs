@@ -96,10 +96,12 @@ impl Vec2 {
         v
     }
 
+    /// Returns the dot product of two vectors A and B (xA * xB + yA * yB).
     pub fn dot(self, other: Vec2) -> f32 {
         self.x * other.x + self.y * other.y
     }
 
+    /// Returns the signed angle in radians between -pi and pi.
     pub fn signed_angle(self, other: Vec2) -> f32 {
         (self.x * other.y - self.y * other.x).atan2(self.dot(other))
     }

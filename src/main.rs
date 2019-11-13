@@ -28,6 +28,7 @@ fn main() {
     let display = Display::new(wb, cb, &events_loop).expect("Could not create glium display");
     graphics::print_api_info(&display);
 
+    // Create Dear ImGui windows
     let mut ui_mngr = ui::init(&display);
     ui_mngr.add_window(ui::window::Debug::default());
     ui_mngr.add_window(ui::window::Algorithms::new(&display));
