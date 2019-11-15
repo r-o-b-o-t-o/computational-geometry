@@ -121,7 +121,7 @@ impl<'f> GrahamScan<'f> {
 
         let hull = Self::scan(&self.points.iter().map(|p| p.position).collect::<Vec<_>>())
                             .into_iter()
-                            .map(|vec| Vertex::new(vec))
+                            .map(Vertex::new)
                             .collect::<Vec<_>>();
         self.hull_buffer = VertexBuffer::new(self.facade, &hull).unwrap(); // Regenerate the hull buffer from result
     }
@@ -167,13 +167,13 @@ impl<'f> GrahamScan<'f> {
 
     }
 
-    pub fn prod_vec(a: &Vec2, b: &Vec2, c: &Vec2) -> f32 {
+    pub fn prod_vec(a: Vec2, b: Vec2, c: Vec2) -> f32 {
         (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y)
     }
 
-    /// Returns a `Vec` of the indices of the points in the
-    /// specified iterator `points` that form the convex hull.
-    pub fn scan<'a>(points: &Vec<Vec2>) -> Vec<Vec2> {
+    /// Returns a `Vec` of points
+    /// that form the convex hull.
+    pub fn scan(points:  &[Vec2]) -> Vec<Vec2> {
         let mut hull = Vec::new();
 
         if points.len() < 2 {
@@ -181,7 +181,7 @@ impl<'f> GrahamScan<'f> {
         }
 
         let bottommost = Self::bottommost_point(points.iter());
-        let mut points_clone = points.clone();
+        let mut points_clone = points.to_owned();
 
         points_clone.remove(bottommost.0);
 
@@ -198,9 +198,9 @@ impl<'f> GrahamScan<'f> {
         });
 
         hull.push(*bottommost.1);
-        
+
         for point in points_clone {
-            while hull.len() > 1 && Self::prod_vec(&hull[hull.len()-2], hull.last().unwrap(), &point) < 0.0 {
+            while hull.len() > 1 && Self::prod_vec(hull[hull.len()-2], *hull.last().unwrap(), point) < 0.0 {
                 hull.pop();
             }
             hull.push(point);
