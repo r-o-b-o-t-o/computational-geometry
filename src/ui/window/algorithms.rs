@@ -1,6 +1,7 @@
 use super::Window;
 
 use crate::algorithms::JarvisMarch;
+use crate::algorithms::GrahamScan;
 
 use glium::{
     Frame,
@@ -36,6 +37,7 @@ impl<'f> Algorithms<'f> {
         Self {
             algs: vec![
                 Box::new(JarvisMarch::new(facade)),
+                Box::new(GrahamScan::new(facade)),
             ],
             selected: 0,
         }
