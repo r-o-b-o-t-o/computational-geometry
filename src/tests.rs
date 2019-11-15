@@ -1,8 +1,11 @@
 #[cfg(test)]
 use crate::math::Vec2;
+#[cfg(test)]
+use std::time::Instant;
 
 #[test]
 fn jarvis_march_basic() {
+
     let points = vec![
         Vec2::new(0.1328125, 0.2265625),
         Vec2::new(-0.123046875, 0.080729164),
@@ -19,7 +22,9 @@ fn jarvis_march_basic() {
     ];
     let hull_indices = [ 11, 10, 2, 8, 6 ];
 
+    let timer = Instant::now();
     let hull = crate::algorithms::JarvisMarch::march(points.iter());
+    println!("Jarvis march: {}µs", timer.elapsed().as_micros());
     for (idx, &hull_idx) in hull.iter().enumerate() {
         assert_eq!(hull_idx, hull_indices[idx]);
     }
@@ -50,6 +55,8 @@ fn graham_scan_basic() {
         points[11], // 1
     ];
 
+    let timer = Instant::now();
     let hull = crate::algorithms::GrahamScan::scan(&points);
+    println!("Graham scan: {}µs", timer.elapsed().as_micros());
     assert_eq!(hull, hull_expected);
 }
