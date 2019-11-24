@@ -15,6 +15,14 @@ pub struct Vertex {
     position: Vec2,
 }
 
+impl Vertex {
+    pub fn new(position: Vec2) -> Self {
+        Self {
+            position,
+        }
+    }
+}
+
 implement_vertex!(Vertex, position);
 
 pub struct JarvisMarch<'f> {
@@ -40,7 +48,7 @@ impl<'f> Drawable for JarvisMarch<'f> {
                 if !io.want_capture_mouse && // Ignore clicks when the cursor is over an ImGui window
                     button == &winit::MouseButton::Left && state == &winit::ElementState::Pressed {
 
-                    // Add a point when the window is clicked
+                    // Add a point on click
                     let coords = graphics::window_pos_to_normalized(io.mouse_pos.into(), window);
                     self.add_point(coords);
                 }
@@ -104,9 +112,7 @@ impl<'f> JarvisMarch<'f> {
 
     /// Add an input point that will be used to compute the convex hull.
     pub fn add_point(&mut self, point: Vec2) {
-        self.points.push(Vertex {
-            position: point,
-        });
+        self.points.push(Vertex::new(point));
         self.points_buffer = VertexBuffer::new(self.facade, &self.points).unwrap(); // Regenerate the buffer
 
         let input = self.points.iter().map(|p| &p.position); // Prepare input for the march algorithm
@@ -148,7 +154,7 @@ impl<'f> JarvisMarch<'f> {
             .scan((0, first), |leftmost, p| {
                 let pos = p.1;
                 let lpos = leftmost.1;
-                if pos.x < lpos.x || math::cmp_f32(pos.x, lpos.x) && pos.y < lpos.y {
+                if pos.x < lpos.x || (math::cmp_f32(pos.x, lpos.x) && pos.y < lpos.y) {
                     *leftmost = p;
                 }
                 Some(*leftmost)
