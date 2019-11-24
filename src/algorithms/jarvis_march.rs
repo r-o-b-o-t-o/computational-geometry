@@ -4,6 +4,8 @@ use crate::{
     ui::window::algorithms::{ Drawable, Configurable },
 };
 
+use std::time::{ Duration, Instant };
+
 use glium::{
     index, Surface, Frame, Program, VertexBuffer, DrawParameters,
     backend::Facade,
@@ -34,6 +36,7 @@ pub struct JarvisMarch<'f> {
     points_buffer: VertexBuffer<Vertex>,
     /// Buffer object that stores the points that form the hull
     hull_buffer: VertexBuffer<Vertex>,
+    exec_time: Option<Duration>,
 }
 
 impl<'f> Drawable for JarvisMarch<'f> {
@@ -63,8 +66,14 @@ impl<'f> Configurable for JarvisMarch<'f> {
     }
 
     fn configure(&mut self, ui: &imgui::Ui) {
+        ui.text(imgui::im_str!("{} vertices", self.points.len()));
+
         if ui.button(imgui::im_str!("Clear Points"), [0.0, 0.0]) {
             self.clear();
+        }
+
+        if let Some(exec_time) = self.exec_time {
+            ui.text(imgui::im_str!("Execution time: {} µs", exec_time.as_micros()));
         }
     }
 }
@@ -82,6 +91,7 @@ impl<'f> JarvisMarch<'f> {
             program,
             points_buffer: VertexBuffer::empty(facade, 0).unwrap(), // Start without any point
             hull_buffer: VertexBuffer::empty(facade, 0).unwrap(), // Same for the hull
+            exec_time: None,
         }
     }
 
@@ -116,10 +126,12 @@ impl<'f> JarvisMarch<'f> {
         self.points_buffer = VertexBuffer::new(self.facade, &self.points).unwrap(); // Regenerate the buffer
 
         let input = self.points.iter().map(|p| &p.position); // Prepare input for the march algorithm
+        let start_time = Instant::now();
         let hull = Self::march(input)
                             .into_iter()
                             .map(|idx| self.points[idx])
                             .collect::<Vec<_>>();
+        self.exec_time = Some(Instant::now() - start_time);
         self.hull_buffer = VertexBuffer::new(self.facade, &hull).unwrap(); // Regenerate the hull buffer from result
     }
 

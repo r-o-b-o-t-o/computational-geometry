@@ -10,7 +10,10 @@ use glium::{
     glutin::{ Event, WindowEvent },
 };
 
-use std::cmp::Ordering;
+use std::{
+    cmp::Ordering,
+    time::{ Instant, Duration },
+};
 
 #[derive(Copy, Clone, Debug)]
 pub struct Vertex {
@@ -36,6 +39,7 @@ pub struct GrahamScan<'f> {
     points_buffer: VertexBuffer<Vertex>,
     /// Buffer object that stores the points that form the hull
     hull_buffer: VertexBuffer<Vertex>,
+    exec_time: Option<Duration>,
 }
 
 impl<'f> Drawable for GrahamScan<'f> {
@@ -65,8 +69,14 @@ impl<'f> Configurable for GrahamScan<'f> {
     }
 
     fn configure(&mut self, ui: &imgui::Ui) {
+        ui.text(imgui::im_str!("{} vertices", self.points.len()));
+
         if ui.button(imgui::im_str!("Clear Points"), [0.0, 0.0]) {
             self.clear();
+        }
+
+        if let Some(exec_time) = self.exec_time {
+            ui.text(imgui::im_str!("Execution time: {} µs", exec_time.as_micros()));
         }
     }
 }
@@ -84,6 +94,7 @@ impl<'f> GrahamScan<'f> {
             program,
             points_buffer: VertexBuffer::empty(facade, 0).unwrap(), // Start without any point
             hull_buffer: VertexBuffer::empty(facade, 0).unwrap(), // Same for the hull
+            exec_time: None,
         }
     }
 
@@ -119,10 +130,12 @@ impl<'f> GrahamScan<'f> {
         });
         self.points_buffer = VertexBuffer::new(self.facade, &self.points).unwrap(); // Regenerate the buffer
 
+        let start_time = Instant::now();
         let hull = Self::scan(&self.points.iter().map(|p| p.position).collect::<Vec<_>>())
                             .into_iter()
                             .map(Vertex::new)
                             .collect::<Vec<_>>();
+        self.exec_time = Some(Instant::now() - start_time);
         self.hull_buffer = VertexBuffer::new(self.facade, &hull).unwrap(); // Regenerate the hull buffer from result
     }
 

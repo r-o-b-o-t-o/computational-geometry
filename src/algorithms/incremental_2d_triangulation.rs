@@ -1,4 +1,7 @@
-use std::cmp::Ordering;
+use std::{
+    cmp::Ordering,
+    time::{ Duration, Instant },
+};
 
 use crate::{
     graphics,
@@ -35,6 +38,7 @@ pub struct Incremental2dTriangulation<'f> {
     /// Buffer object that stores all the points
     points_buffer: VertexBuffer<Vertex>,
     triangles_buffer: IndexBuffer<u32>,
+    exec_time: Option<Duration>,
 }
 
 impl<'f> Drawable for Incremental2dTriangulation<'f> {
@@ -64,8 +68,14 @@ impl<'f> Configurable for Incremental2dTriangulation<'f> {
     }
 
     fn configure(&mut self, ui: &imgui::Ui) {
+        ui.text(imgui::im_str!("{} vertices, {} triangles", self.points.len(), self.triangles_buffer.get_size() / 3 / std::mem::size_of::<u32>()));
+
         if ui.button(imgui::im_str!("Clear Points"), [0.0, 0.0]) {
             self.clear();
+        }
+
+        if let Some(exec_time) = self.exec_time {
+            ui.text(imgui::im_str!("Execution time: {} µs", exec_time.as_micros()));
         }
     }
 }
@@ -83,6 +93,7 @@ impl<'f> Incremental2dTriangulation<'f> {
             program,
             points_buffer: VertexBuffer::empty(facade, 0).unwrap(), // Start without any point
             triangles_buffer: IndexBuffer::empty(facade, index::PrimitiveType::TrianglesList, 0).unwrap(),
+            exec_time: None,
         }
     }
 
@@ -98,7 +109,7 @@ impl<'f> Incremental2dTriangulation<'f> {
 
     fn draw_triangles(&self, target: &mut Frame) {
         let uniforms = uniform! {
-            color: [ 0.0_f32, 0.0_f32, 0.8_f32 ],
+            color: [ 0.0_f32, 0.2_f32, 1.0_f32 ],
         };
         let mut draw_params = DrawParameters::default();
         draw_params.polygon_mode = PolygonMode::Line;
@@ -114,7 +125,9 @@ impl<'f> Incremental2dTriangulation<'f> {
                                     .iter()
                                     .map(|v| v.position)
                                     .collect::<Vec<_>>();
+        let start_time = Instant::now();
         let indices = Self::triangulate(&mut positions);
+        self.exec_time = Some(Instant::now() - start_time);
 
         // Convert our positions back to vertices, since the triangulate function sorts the input data (positions),
         // we need to change the order of our vertices vector as well so we recreate it from the positions
@@ -146,6 +159,7 @@ impl<'f> Incremental2dTriangulation<'f> {
     pub fn clear(&mut self) {
         self.points.clear();
         self.points_buffer = VertexBuffer::empty(self.facade, 0).unwrap();
+        self.triangles_buffer = IndexBuffer::empty(self.facade, index::PrimitiveType::TrianglesList, 0).unwrap();
     }
 
     /// Sorts points by increasing x coordinates, and by increasing y coordinates if two points are on the same vertical line
