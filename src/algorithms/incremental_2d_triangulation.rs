@@ -232,4 +232,18 @@ impl<'f> Incremental2dTriangulation<'f> {
 
         indices
     }
+
+    pub fn edge_flipping(indices: &mut Vec<usize>, points: &Vec<Vec2>) {
+        // ve: get_edges();
+        // while (!ve.is_empty()) {
+        //      edge = ve.pop();
+        //      if !delauney_critera(edge) {
+        //          [0, 1, 2]
+        //          [1, 2, 3]
+        //           ->
+        //          [0, 1, 3]
+        //          [0, 3, 2]
+        //      }
+        // }
+    }
 }
