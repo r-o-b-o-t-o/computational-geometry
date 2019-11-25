@@ -83,14 +83,6 @@ impl Vec2 {
         self.y / self.x
     }
 
-    /// Returns the y value of the point that satisfies x = 0
-    pub fn y_intercept(self) -> f32 {
-        if cmp_f32(self.x, 0.0) {
-            return std::f32::NAN;
-        }
-        self.y - self.slope() * self.x
-    }
-
     /// Checks whether a line intersects with another
     pub fn intersects(self, other: Self) -> bool {
         !self.collinear(other)
@@ -163,7 +155,9 @@ impl Vec2 {
     }
 
     pub fn shoelace(a: Self, b: Self, c: Self) -> f32 {
-        a.x * b.y - b.x * a.y + b.x * c.y - c.x * b.y + c.x * a.y - a.x * c.y
+        a.x * b.y - b.x * a.y +
+        b.x * c.y - c.x * b.y +
+        c.x * a.y - a.x * c.y
     }
 }
 

@@ -1,21 +1,3 @@
-/*module.exports = class Rect {
-    constructor(pointA, pointB) {
-        if (pointA.x < pointB.x) {
-            this.left = pointA.x;
-            this.right = pointB.x;
-        } else {
-            this.left = pointB.x;
-            this.right = pointA.x;
-        }
-        if (pointA.y < pointB.y) {
-            this.top = pointA.y;
-            this.bottom = pointB.y;
-        } else {
-            this.top = pointB.y;
-            this.bottom = pointA.y;
-        }
-    }
-}*/
 use super::Vec2;
 
 #[derive(Copy, Clone, PartialEq, Debug)]

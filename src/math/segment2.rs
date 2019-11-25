@@ -44,10 +44,15 @@ impl Segment2 {
             return false;
         }
 
+        // Special case if the segment is vertical
+        if cmp_f32(self.a.x, self.b.x) {
+            return (self.a.y > self.b.y && point.y >= self.b.y && point.y <= self.a.y) ||
+                    (self.a.y < self.b.y && point.y >= self.a.y && point.y <= self.b.y);
+        }
+
         // Check if the point is on the line formed by the extended segment
-        let v = self.as_vec2();
-        let a = v.slope();
-        let b = v.y_intercept();
+        let a = self.as_vec2().slope();
+        let b = self.y_intercept();
         cmp_f32(a * point.x + b, point.y)
     }
 
@@ -91,10 +96,18 @@ impl Segment2 {
             return Vec2::new(x, y);
         }
 
-        let b1 = v1.y_intercept();
-        let b2 = v2.y_intercept();
+        let b1 = self.y_intercept();
+        let b2 = other.y_intercept();
         let x = (b2 - b1) / (a1 - a2);
         let y = a1 * x + b1;
         Vec2::new(x, y)
+    }
+
+    /// Returns the y value of the point that satisfies x = 0
+    pub fn y_intercept(self) -> f32 {
+        if cmp_f32(self.a.x, self.b.x) {
+            return std::f32::NAN;
+        }
+        self.a.y - self.as_vec2().slope() * self.a.x
     }
 }
