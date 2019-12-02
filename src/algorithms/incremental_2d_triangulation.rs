@@ -233,13 +233,89 @@ impl<'f> Incremental2dTriangulation<'f> {
         indices
     }
 
+    pub fn get_triangles(indices: &mut Vec<usize>) -> (Vec<(usize, usize, usize)>, Vec<usize>) {
+        let mut triangles = vec![];
+        let mut pos = vec![];
+        for i in (0..indices.len()).step_by(3) {
+            triangles.push((indices[i], indices[i+1], indices[i+2]));
+            pos.push(i);
+        }
+        (triangles, pos)
+    }
+
+    pub fn determinant() -> i32 {
+        0
+    }
+    
+    pub fn indice_in_triangle(i: usize, triangle: &(usize, usize, usize)) -> bool {
+        i == triangle.0 || i == triangle.1 || i == triangle.2
+    }
+
+    pub fn get_opposite(triangle1: &(usize, usize, usize), triangle2: &(usize, usize, usize)) -> (usize, usize, usize, usize) {
+        let (mut opposite1, mut opposite2, mut edge1, mut edge2) = (0, 0, 0, 0);
+        if Self::indice_in_triangle(triangle1.0, triangle2) {
+            opposite1 = triangle1.0;
+        }
+        else {
+            edge1 = triangle1.0;
+        }
+        if Self::indice_in_triangle(triangle1.1, triangle2) {
+            if opposite1 == 0 {
+                opposite1 = triangle1.1;
+            }
+            else {
+                opposite2 = triangle1.1;
+            }
+        }
+        else {
+            if edge1 == 0 {
+                edge1 = triangle1.1;
+            }
+            else {
+                edge2 = triangle1.1;
+            }
+        }
+        if Self::indice_in_triangle(triangle1.2, triangle2) {
+            if opposite1 == 0 {
+                opposite1 = triangle1.2;
+            }
+            else {
+                opposite2 = triangle1.2;
+            }
+        }
+        else {
+            if edge1 == 0 {
+                edge1 = triangle1.2;
+            }
+            else {
+                edge2 = triangle1.2;
+            }
+        }
+        (opposite1, opposite2, edge1, edge2)
+    }
+
     pub fn edge_flipping(indices: &mut Vec<usize>, points: &Vec<Vec2>) {
+        let (triangles, pos) = Self::get_triangles(indices);
+        for triangle in &mut triangles {
+            for other_triangle in &mut triangles {
+                if triangle == other_triangle {
+                    continue;
+                }
+                if Self::determinant() > 0 {
+                    let (opposite1, opposite2, edge1, edge2) = Self::get_opposite(triangle, other_triangle);
+                    triangle = &mut (opposite1, edge1, opposite2);
+                    other_triangle = &mut (opposite1, opposite2, edge2);
+                    //newTri1 = [iOpposite1, edge[0], iOpposite2]
+                    //newTri2 = [iOpposite1, iOpposite2, edge[1]]
+                }
+            }
+        }
         // ve: get_edges();
         // while (!ve.is_empty()) {
         //      edge = ve.pop();
         //      if !delauney_critera(edge) {
         //          [0, 1, 2]
-        //          [1, 2, 3]
+        //          [2, 1, 3]
         //           ->
         //          [0, 1, 3]
         //          [0, 3, 2]
