@@ -12,3 +12,6 @@ imgui-winit-support = { version = "0.3.0-pre", git = "https://github.com/Gekkio/
 clipboard = "0.5"
 winit = "0.19.5"
 rand = "0.7.2"
+glm = "0.2.3"
+cgmath = { version = "0.17.0", features = ["swizzle"] }
+tobj = "0.1.11"

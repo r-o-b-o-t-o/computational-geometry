@@ -38,6 +38,7 @@ impl<'f> Algorithms<'f> {
                 Box::new(JarvisMarch::new(facade)),
                 Box::new(GrahamScan::new(facade)),
                 Box::new(Incremental2dTriangulation::new(facade)),
+                Box::new(ConvexHull::new(facade)),
             ],
             selected: 0,
         }

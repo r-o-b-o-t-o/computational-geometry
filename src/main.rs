@@ -60,7 +60,7 @@ fn main() {
         });
 
         let mut target = display.draw();
-        target.clear_color_srgb(0.12, 0.12, 0.12, 1.0);
+        target.clear_color_srgb_and_depth((0.12, 0.12, 0.12, 1.0), 1.0);
         ui_mngr.draw(&window, &mut target);
         target.finish().expect("Could not swap buffers");
     }
