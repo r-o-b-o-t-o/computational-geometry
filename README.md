@@ -10,7 +10,7 @@ This repository contains Rust implementations of multiple computational geometry
 - [x] [Jarvis march](https://en.wikipedia.org/wiki/Gift_wrapping_algorithm)
 - [x] [Graham scan](https://en.wikipedia.org/wiki/Graham_scan)
 - [x] Basic triangulation of a set of points
-- [ ] [Delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation)
+- [x] [Delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation)
 - [ ] [Voronoi diagram](https://en.wikipedia.org/wiki/Voronoi_diagram)
 
 #### 3D

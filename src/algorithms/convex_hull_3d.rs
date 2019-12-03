@@ -251,7 +251,7 @@ impl<'f> ConvexHull<'f> {
         graph.faces.push(GraphFace { idx:(1, 2, 3), color: Color::White });
         let b = points[graph.vertices[0].idx as usize].position.0;
 
-        for point_to_add in iter {
+        for _point_to_add in iter {
             for face in graph.faces.iter() {
                 let mut normal = face.normal(points);
                 let p1 = points[face.idx.0 as usize].position.0;
