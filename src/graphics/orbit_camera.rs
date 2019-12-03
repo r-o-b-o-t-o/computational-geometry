@@ -91,7 +91,7 @@ impl OrbitCamera {
                 if self.rotate && self.is_rotating {
                     self.phi += delta.0 as f32 * self.sensitivity.x;
                     self.theta += delta.1 as f32 * self.sensitivity.y;
-                    self.theta = math::clamp(self.theta, -89.0_f32.to_radians(), 89.0_f32.to_radians());
+                    self.theta = math::clamp(self.theta, (-89.0_f32).to_radians(), 89.0_f32.to_radians());
                 }
             }
         }

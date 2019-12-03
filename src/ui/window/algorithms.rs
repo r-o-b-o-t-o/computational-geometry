@@ -56,7 +56,7 @@ impl<'f> Window for Algorithms<'f> {
 
         imgui::Window::new(im_str!("Algorithms"))
                     .resizable(true)
-                    .size([220.0, 140.0], Condition::FirstUseEver)
+                    .size([220.0, 150.0], Condition::FirstUseEver)
                     .position([16.0, 16.0], Condition::FirstUseEver)
                     .build(&ui, || {
                         // Create a vector containing the names of the available algorithms
