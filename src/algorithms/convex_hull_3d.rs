@@ -50,7 +50,7 @@ pub struct GraphFace {
 }
 
 impl GraphFace {
-    pub fn normal(&self, vertices: &Vec<Vertex>) -> Vec3 {
+    pub fn normal(&self, vertices: &[Vertex]) -> Vec3 {
         let p1 = vertices[self.idx.0 as usize].position.0;
         let p2 = vertices[self.idx.1 as usize].position.0;
         let p3 = vertices[self.idx.2 as usize].position.0;
@@ -225,7 +225,7 @@ impl<'f> ConvexHull<'f> {
         target.draw(&self.points_buffer, &self.faces_indices, &self.faces_program, &uniforms, &draw_params).expect("Draw failure");
     }
 
-    pub fn hull(points: &Vec<Vertex>) -> Graph {
+    pub fn hull(points: &[Vertex]) -> Graph {
         let mut graph = Graph::default();
 
         let n = points.len();
